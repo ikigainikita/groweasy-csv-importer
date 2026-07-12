@@ -46,14 +46,12 @@ coverage/
 # Vite
 vite.config.ts.timestamp-*
 
-# Frontend specific
-frontend/dist/
-frontend/node_modules/
-
-# Backend specific
-backend/dist/
-backend/node_modules/
-backend/.env
+# API folder (Vercel serverless functions)
+api/dist/
+api/node_modules/
+api/lib/*.js
+api/lib/*.js.map
+api/lib/*.d.ts
 
 # Temporary files
 tmp/
@@ -71,3 +69,4 @@ uploads/
 
 # Docker
 docker-compose.override.yml
+.claude

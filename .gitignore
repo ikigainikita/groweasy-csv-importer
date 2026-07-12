@@ -70,3 +70,5 @@ uploads/
 # Docker
 docker-compose.override.yml
 .claude
+.vercel
+.env*

@@ -3,7 +3,7 @@ import { api } from '@/api/client';
 import type {
   PreviewResponse,
   JobResultsResponse,
-  CrmLead,
+  
 } from '@/types/crm';
 
 type Step = 'upload' | 'preview' | 'confirm' | 'extracting' | 'results';

@@ -21,7 +21,12 @@ export function CrmStatusBadge({ status, showLabel = true }: CrmStatusBadgeProps
     );
   }
 
-  const config = statusConfig[status];
+  // ✅ THE FIX: Look up the config, but provide a safe fallback if the AI generated an unknown status
+  const config = statusConfig[status] || {
+    label: status, // Just display whatever weird text the AI sent
+    color: 'bg-gray-100 text-gray-800 border border-gray-200', // Safe default colors
+    icon: '•' // Safe default icon
+  };
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${config.color}`}>

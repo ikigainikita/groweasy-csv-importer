@@ -22,7 +22,10 @@ export function DataSourceBadge({ source, showLabel = true }: DataSourceBadgePro
     );
   }
 
-  const config = sourceConfig[source];
+  // ✅ THE FIX: Add a fallback object if the source isn't in your config
+  const config = sourceConfig[source] || {
+    label: source // Just print whatever text the backend sent!
+  };
 
   return (
     <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-800 rounded-full">

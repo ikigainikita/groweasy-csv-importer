@@ -95,7 +95,8 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
     ),
   ], []);
 
-  const rowData = useMemo(() => results.leads, [results.leads]);
+  // ADD THIS: || [] to prevent the React Table crash
+  const rowData = useMemo(() => results.leads || [], [results.leads]);
 
   const table = useReactTable({
     data: rowData,
@@ -126,9 +127,11 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   const handleDownloadJSON = () => downloadJSON(results.leads, 'crm-leads.json');
 
   // Calculate status distribution from leads
+  // Calculate status distribution from leads safely
   const statusCounts = useMemo(() => {
     const dist: Record<string, number> = {};
-    results.leads.forEach((r) => {
+    // ADD THIS: (results.leads || [])
+    (results.leads || []).forEach((r) => {
       const status = r.crm_status || 'UNKNOWN';
       dist[status] = (dist[status] || 0) + 1;
     });
@@ -136,9 +139,10 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   }, [results.leads]);
 
   // Calculate stats for display
-  const totalRecords = results.stats.totalInput;
-  const successfulRecords = results.stats.totalExtracted;
-  const skippedRecords = results.stats.filteredNoContact;
+  // Calculate stats for display safely using optional chaining and fallbacks
+  const totalRecords = results.stats?.totalInput || 0;
+  const successfulRecords = results.stats?.totalExtracted || 0;
+  const skippedRecords = results.stats?.filteredNoContact || 0;
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
@@ -186,7 +190,8 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
       {/* Results Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-gray-200 flex flex-wrap gap-3 items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Extracted Leads ({results.leads.length})</h3>
+          {/* Change results.leads.length to rowData.length so it doesn't crash if undefined */}
+          <h3 className="text-lg font-semibold text-gray-900">Extracted Leads ({rowData.length})</h3>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />

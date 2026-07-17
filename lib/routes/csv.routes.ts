@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
-import type { RawCsvRecord, CsvPreviewResponse, CsvValidationResult } from '../types/index';
+import type { RawCsvRecord, CsvPreviewResponse, CsvValidationResult } from '../types/index.js';
 
 // 1. Configure Multer for In-Memory Storage (Vercel read-only filesystem)
 // Using 4.5MB limit matches Vercel's serverless payload limit

@@ -1,11 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import multer from 'multer';
-import csvRoutes from './routes/csv.routes';
-
-// Create Express Router instead)
-// Import the csv routes that use memory storage
-import csvRoutesStandalone from './routes/csv.routes';
+import csvRoutes from './routes/csv.routes.js';
 
 export function createApp() {
   const app = express();

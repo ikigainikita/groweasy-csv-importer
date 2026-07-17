@@ -6,9 +6,10 @@ import type {
   JobResultsResponse,
 } from '@/types/crm';
 
-// Use relative URL for Vercel deployment (same-origin)
-// VITE_API_URL can be set for local development with separate backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Use relative URLs in development (Vite proxy handles /api -> backend)
+// Use absolute URL in production (for Vercel deployment where API is same-origin)
+const isDev = import.meta.env.DEV;
+const API_BASE_URL = isDev ? '' : (import.meta.env.VITE_API_URL || '');
 
 class ApiClient {
   private client: AxiosInstance;

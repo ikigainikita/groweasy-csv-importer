@@ -3,7 +3,6 @@ import { api } from '@/api/client';
 import type {
   PreviewResponse,
   JobResultsResponse,
-  
 } from '@/types/crm';
 
 type Step = 'upload' | 'preview' | 'confirm' | 'extracting' | 'results';
@@ -102,13 +101,8 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
         updateState({ jobId: response.jobId });
         await pollJob(response.jobId);
       } else {
-        // ✅ FIXED SYNC RESPONSE:
         const safeResponse = response as any;
-        
-        // Grab the array from whichever key the backend uses
         const extractedData = safeResponse.leads || safeResponse.previewData || safeResponse.data || safeResponse.extractedRows || [];
-        
-        // Grab the count or fallback to the array length
         const totalCount = safeResponse.stats?.totalInput || safeResponse.totalRows || extractedData.length;
 
         const results: JobResultsResponse = {
@@ -120,7 +114,6 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
             filteredNoContact: 0
           },
         };
-        
         updateState({ step: 'results', results, jobId: null });
       }
     } catch (err) {
@@ -131,6 +124,7 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
       setLoading(false);
     }
   }, [state.file, state.previewData, setLoading, setError, updateState]);
+
   const pollJob = useCallback(async (jobId: string) => {
     while (true) {
       if (abortControllerRef.current?.signal.aborted) break;
@@ -149,8 +143,23 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
 
         if (status.status === 'completed' || status.status === 'failed') {
           if (status.status === 'completed') {
-            const results = await api.getJobResults(jobId);
-            updateState({ step: 'results', results, jobId: null });
+            const rawResults = await api.getJobResults(jobId);
+            
+            // ✅ FIXED POLLING RESPONSE MAPPING:
+            const safeResponse = rawResults as any;
+            const extractedData = safeResponse.leads || safeResponse.previewData || safeResponse.data || safeResponse.extractedRows || [];
+            const totalCount = safeResponse.stats?.totalInput || safeResponse.totalRows || extractedData.length;
+
+            const mappedResults: JobResultsResponse = {
+              jobId: '',
+              leads: extractedData,
+              stats: safeResponse.stats || {
+                totalInput: totalCount,
+                totalExtracted: extractedData.length,
+                filteredNoContact: 0
+              },
+            };
+            updateState({ step: 'results', results: mappedResults, jobId: null });
           } else {
             setError(status.error || 'Extraction failed');
             updateState({ step: 'confirm', jobId: null });

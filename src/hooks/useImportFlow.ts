@@ -102,13 +102,25 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
         updateState({ jobId: response.jobId });
         await pollJob(response.jobId);
       } else {
-        // Sync response
-        const syncResponse = response as { leads: CrmLead[]; stats: any };
+        // ✅ FIXED SYNC RESPONSE:
+        const safeResponse = response as any;
+        
+        // Grab the array from whichever key the backend uses
+        const extractedData = safeResponse.leads || safeResponse.previewData || safeResponse.data || safeResponse.extractedRows || [];
+        
+        // Grab the count or fallback to the array length
+        const totalCount = safeResponse.stats?.totalInput || safeResponse.totalRows || extractedData.length;
+
         const results: JobResultsResponse = {
           jobId: '',
-          leads: syncResponse.leads,
-          stats: syncResponse.stats,
+          leads: extractedData,
+          stats: safeResponse.stats || {
+            totalInput: totalCount,
+            totalExtracted: extractedData.length,
+            filteredNoContact: 0
+          },
         };
+        
         updateState({ step: 'results', results, jobId: null });
       }
     } catch (err) {
@@ -119,7 +131,6 @@ export function useImportFlow(): { state: FlowState; actions: FlowActions } {
       setLoading(false);
     }
   }, [state.file, state.previewData, setLoading, setError, updateState]);
-
   const pollJob = useCallback(async (jobId: string) => {
     while (true) {
       if (abortControllerRef.current?.signal.aborted) break;

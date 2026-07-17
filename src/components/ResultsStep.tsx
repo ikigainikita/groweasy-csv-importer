@@ -96,8 +96,11 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   ], []);
 
   // ADD THIS: || [] to prevent the React Table crash
-  const rowData = useMemo(() => results.leads || [], [results.leads]);
-
+  // Look for leads, but fall back to previewData or data if the backend names it differently
+  const rowData = useMemo(() => {
+    return results.leads || (results as any).previewData || (results as any).data || [];
+  }, [results]);
+  
   const table = useReactTable({
     data: rowData,
     columns,
@@ -130,20 +133,21 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   // Calculate status distribution from leads safely
   const statusCounts = useMemo(() => {
     const dist: Record<string, number> = {};
-    // ADD THIS: (results.leads || [])
-    (results.leads || []).forEach((r) => {
+    // Use the rowData we defined above!
+    rowData.forEach((r: CrmLead) => {
       const status = r.crm_status || 'UNKNOWN';
       dist[status] = (dist[status] || 0) + 1;
     });
     return dist;
-  }, [results.leads]);
-
+  }, [rowData]); // <-- Dependency changed to rowData
   // Calculate stats for display
   // Calculate stats for display safely using optional chaining and fallbacks
-  const totalRecords = results.stats?.totalInput || 0;
-  const successfulRecords = results.stats?.totalExtracted || 0;
+  // Check for stats.totalInput first, but fall back to totalRows
+  const totalRecords = results.stats?.totalInput || (results as any).totalRows || rowData.length || 0;
+  
+  // If the backend doesn't send specific success/skip numbers, just use the array length
+  const successfulRecords = results.stats?.totalExtracted || rowData.length || 0;
   const skippedRecords = results.stats?.filteredNoContact || 0;
-
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
       {/* Summary Cards - using backend stats format */}

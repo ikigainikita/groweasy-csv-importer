@@ -38,6 +38,7 @@ const CRM_COLUMNS: { key: keyof CrmLead; header: string; width: number }[] = [
 ];
 
 export function ResultsStep({ results, onReset }: { results: JobResultsResponse; onReset: () => void }) {
+  console.log("DEBUG RESULTS:", results);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(25);
@@ -98,9 +99,19 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   // ADD THIS: || [] to prevent the React Table crash
   // Look for leads, but fall back to previewData or data if the backend names it differently
   const rowData = useMemo(() => {
-    return results.leads || (results as any).previewData || (results as any).data || [];
+    // 1. Safety check: If results is null/undefined, return empty array
+    if (!results) return [];
+    
+    // 2. If results is ALREADY the array itself
+    if (Array.isArray(results)) return results;
+    
+    // 3. Tell TypeScript to temporarily ignore the strict type definitions
+    const safeResults = results as any;
+    
+    // 4. Safely check all the common keys without TypeScript complaining
+    return safeResults.leads || safeResults.previewData || safeResults.data || safeResults.extractedRows || [];
   }, [results]);
-  
+
   const table = useReactTable({
     data: rowData,
     columns,
@@ -143,9 +154,11 @@ export function ResultsStep({ results, onReset }: { results: JobResultsResponse;
   // Calculate stats for display
   // Calculate stats for display safely using optional chaining and fallbacks
   // Check for stats.totalInput first, but fall back to totalRows
-  const totalRecords = results.stats?.totalInput || (results as any).totalRows || rowData.length || 0;
-  
-  // If the backend doesn't send specific success/skip numbers, just use the array length
+  // Tell TypeScript to ignore strict typing for the stats calculation
+  const safeResults = results as any;
+
+  // Now it won't complain when you ask for totalRows instead of stats
+  const totalRecords = results.stats?.totalInput || safeResults.totalRows || rowData.length || 0;
   const successfulRecords = results.stats?.totalExtracted || rowData.length || 0;
   const skippedRecords = results.stats?.filteredNoContact || 0;
   return (
